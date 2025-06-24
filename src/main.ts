@@ -4,9 +4,11 @@ import { HttpExceptionFilter } from './core/filter/http-exception/http-exception
 import { TransformInterceptor } from './core/interceptor/transform/transform.interceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
   // 注册全局错误的过滤器
   app.useGlobalFilters(new HttpExceptionFilter());
   // 全局注册拦截器
@@ -24,6 +26,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
+  app.useStaticAssets('public', { prefix: '/static' });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

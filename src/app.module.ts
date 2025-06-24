@@ -6,6 +6,12 @@ import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
 import envConfig from '../config/env';
 import { PostsEntity } from './posts/entities/posts.entity';
+import { AuthModule } from './auth/auth.module';
+import { AuthEntity } from './auth/entities/auth.entity';
+import { JwtAuthGuard } from './auth/jwt-auth.grard';
+import { APP_GUARD } from '@nestjs/core';
+import { RedisService } from './redis/redis.service';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -18,7 +24,7 @@ import { PostsEntity } from './posts/entities/posts.entity';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql', // 数据库类型
-        entities: [PostsEntity], // 数据表实体，synchronize为true时，自动创建表，生产环境建议关闭
+        entities: [PostsEntity, AuthEntity], // 数据表实体，synchronize为true时，自动创建表，生产环境建议关闭
         host: configService.get('DB_HOST'), // 主机，默认为localhost
         port: configService.get<number>('DB_PORT'), // 端口号
         username: configService.get('DB_USER'), // 用户名
@@ -29,9 +35,18 @@ import { PostsEntity } from './posts/entities/posts.entity';
       }),
     }),
     PostsModule,
+    AuthModule,
+    RedisModule,
   ],
   controllers: [AppController],
   // 注册为全局守卫
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    RedisService,
+  ],
 })
 export class AppModule {}
