@@ -4,29 +4,50 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { map, Observable } from 'rxjs';
-
-// 定义响应数据的接口
-interface ResponseData<T = any> {
-  data: T;
-  code: number;
-  msg: string;
-}
+import { map, Observable, tap } from 'rxjs';
+import { LoggerService } from '../../../logger/logger.service';
 
 @Injectable()
-export class TransformInterceptor<T = any>
-  implements NestInterceptor<T, ResponseData<T>>
-{
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler<T>,
-  ): Observable<ResponseData<T>> {
+export class TransformInterceptor implements NestInterceptor {
+  constructor(private readonly logger: LoggerService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const now = Date.now();
+    const request = context.switchToHttp().getRequest();
+    const { method, url, headers, body, query, params } = request;
+
+    // 记录请求的基本信息
+    this.logger.log('请求信息:', {
+      url,
+      method,
+      headers,
+      body,
+      query,
+      params,
+      message: '请求信息',
+    });
+
     return next.handle().pipe(
-      map((data: T) => {
-        return {
-          data,
+      tap((data) => {
+        // 记录响应时间
+        const responseTime = Date.now() - now;
+
+        // 记录请求的响应时间和状态
+        this.logger.log('响应信息:', {
+          url,
+          method,
+          responseTime: `${responseTime}ms`,
+          statusCode: data?.statusCode || 200, // 默认 200 状态码
           code: 0,
-          msg: '请求成功',
+          msg: 'success',
+        });
+      }),
+
+      map((data) => {
+        return {
+          code: 0,
+          msg: 'success',
+          data,
         };
       }),
     );

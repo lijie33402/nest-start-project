@@ -5,14 +5,17 @@ import { TransformInterceptor } from './core/interceptor/transform/transform.int
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { LoggerService } from './logger/logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 注册全局 logger 拦截器
+  const loggerService = app.get(LoggerService);
 
   // 注册全局错误的过滤器
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(loggerService));
   // 全局注册拦截器
-  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalInterceptors(new TransformInterceptor(loggerService));
   // 注册全局管道
   app.useGlobalPipes(new ValidationPipe());
   // 配置swagger

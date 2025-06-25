@@ -13,6 +13,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
 import { UploadModule } from './upload/upload.module';
+import { LoggerService } from './logger/logger.service';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { UploadModule } from './upload/upload.module';
       useClass: JwtAuthGuard,
     },
     RedisService,
+    LoggerService,
   ],
 })
 export class AppModule {}
