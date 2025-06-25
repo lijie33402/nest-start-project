@@ -21,3 +21,5 @@ EXPOSE 3000
 
 # 启动应用
 CMD ["yarn", "start:prod"] 
+
+VOLUME ["/www/wwwroot/8pm.xyz/uploads"]
